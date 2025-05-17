@@ -5,7 +5,7 @@
 MetaNodeSwap 设计每个池子都有一个价格范围，swap 只能在此价格范围内成交
 
 1. 任何人都可以创建池子，创建池子可以指定当前价格、价格范围： [a, b] 和 费率 f；相同交易对和费率可以有多个池子；不能删除和修改池子；
-2. 任何人都可以添加流动性，添加流动性只能在指定价格范围 [a, b]；
+2. 任何人都可以添加流动性，添加流动性只能在指定价格范围 [a, b]，不能自定义范围；
 3. 流动性提供者可以减少添加的流动性，并提取减少流动性对应的两种代币；
 4. 流动性提供者可以在任何人 swap 过程收取手续费，手续费为 f，按流动性贡献加权平分给流动性提供者；
 5. 任何人都可以 swap，swap 需要指定某个池子，swap 可以指定输入（最大化输出）或者指定输出（最小化输入），如果指定的池子的流动性不足，则只会部分成交。
@@ -19,8 +19,8 @@ MetaNodeSwap 设计每个池子都有一个价格范围，swap 只能在此价�
 以简单为原则，我们不按照 Uniswap V3 将合约分为 `periphery` 和 `core` 两个独立仓库，而是自顶向下分为以下四个合约。
 
 - `PoolManager.sol`: 顶层合约，对应 Pool 页面，负责 Pool 的创建和管理。
-- `PositionManager.sol`: 顶层合约，对应 Position 页面，负责 LP 头寸和流动性的管理；
-- `SwapRouter.sol`: 顶层合约，对应 Swap 页面，负责预估价格和交易；
+- `PositionManager.sol`: 顶层合约，对应 Position 页面，负责 LP 头寸和流动性的管理。
+- `SwapRouter.sol`: 顶层合约，对应 Swap 页面，负责预估价格和交易。
 - `Factory.sol`: 底层合约，Pool 的工厂合约；
 - `Pool.sol`: 最底层合约，对应一个交易池，记录了当前价格、头寸、流动性等信息。
 
@@ -47,11 +47,12 @@ struct PoolInfo {
     address token0;
     address token1;
     uint32 index;
-    uint8 feeProtocol;
+    int24 fee;
     int24 tickLower;
     int24 tickUpper;
     int24 tick;
     uint160 sqrtPriceX96;
+    uint128 liquidity;
 }
 function getAllPools() external view returns (PoolInfo[] memory poolsInfo);
 ```
@@ -64,7 +65,7 @@ function getAllPools() external view returns (PoolInfo[] memory poolsInfo);
 - 费率;
 - 价格范围；
 - 当前价格；
-- 三个区间的总流动性。
+- 流动性。
 
 此外还有一个添加池子的操作，当添加头寸时如果发现还没有对应的池子，需要先创建一个池子。
 
@@ -192,7 +193,7 @@ function mint(
 
 
 
-值得注意的是，选定 token0 和 token1 是两个下拉框，费率会自动显示。要想实现这个逻辑，我们需要依赖 `PoolManager.sol` 的接口，分别是：
+值得注意的是，选定 token0 和 token1 两个下拉框，费率会自动显示。要想实现这个逻辑，我们需要依赖 `PoolManager.sol` 的接口，分别是：
 
 - `getPairs`: 获取所有的交易对，用于 LP 选择交易对。
 - `getAllPools`：获取所有的交易池信息，选择交易对后可以通过该方法获得全部的交易池，并按照 LP 选择的交易对等信息过滤。
@@ -241,7 +242,7 @@ DApp 需要分析出最优的 Swap 路径，这里用 `indexPath` 和 `sqrtPrice
 然后就是估算逻辑了，有以下两种方法：
 
 - `quoteExactInput`：用户输入框输入 token0 的数量，输出框自动展示 token1 的数量；
-- `quoteExactOutput`:用户输出框输入 token1 的数量，输入框自动展示 token0 的数量；
+- `quoteExactOutput`: 用户输出框输入 token1 的数量，输入框自动展示 token0 的数量；
 
 接口定义如下：
 

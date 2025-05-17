@@ -223,7 +223,10 @@ contract PositionManager is IPositionManager, ERC721 {
         // position 已经彻底没用了，销毁
         position.tokensOwed0 = 0;
         position.tokensOwed1 = 0;
-        _burn(positionId);
+
+        if (position.liquidity == 0) {
+            _burn(positionId);
+        }
     }
 
     function mintCallback(
