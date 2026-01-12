@@ -27,4 +27,24 @@ interface IPool {
         int24 tickLower,
         int24 tickUpper
     );
+
+    /**
+     * @notice 获取池的slot0信息
+     * @return sqrtPriceX96 当前价格的平方根（Q64.96格式）
+     * @return tick 当前tick值
+     * @return observationIndex 观察索引
+     * @return observationCardinality 观察基数
+     * @return observationCardinalityNext 下一个观察基数
+     * @return feeProtocol 协议费率
+     * @return unlocked 是否解锁
+     */
+    function slot0() external view returns (
+        uint160 sqrtPriceX96,
+        int24 tick,
+        uint16 observationIndex,
+        uint16 observationCardinality,
+        uint16 observationCardinalityNext,
+        uint8 feeProtocol,
+        bool unlocked
+    );
 }

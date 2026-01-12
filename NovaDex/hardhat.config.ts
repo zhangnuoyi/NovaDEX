@@ -11,7 +11,8 @@ export default defineConfig({
           optimizer: {
             enabled: true,
             runs: 200
-          }
+          },
+          viaIR: true
         }
       },
       production: {
@@ -20,7 +21,8 @@ export default defineConfig({
           optimizer: {
             enabled: true,
             runs: 200
-          }
+          },
+          viaIR: true
         }
       }
     }

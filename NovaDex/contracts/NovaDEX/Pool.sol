@@ -67,4 +67,30 @@ contract Pool is IPool {
     ) {
         return (token0, token1, fee, tickLower, tickUpper);
     }
+
+    /**
+     * @notice 获取池的slot0信息
+     * @return sqrtPriceX96 当前价格的平方根（Q64.96格式）
+     * @return tick 当前tick值
+     * @return observationIndex 观察索引
+     * @return observationCardinality 观察基数
+     * @return observationCardinalityNext 下一个观察基数
+     * @return feeProtocol 协议费率
+     * @return unlocked 是否解锁
+     */
+    function slot0() external view override returns (
+        uint160, int24, uint16, uint16, uint16, uint8, bool
+    ) {
+        // 返回当前价格和状态信息
+        // 由于是简化实现，部分参数返回默认值
+        return (
+            sqrtPriceX96,
+            tick,
+            0, // observationIndex
+            0, // observationCardinality
+            0, // observationCardinalityNext
+            0, // feeProtocol
+            true // unlocked
+        );
+    }
 }
