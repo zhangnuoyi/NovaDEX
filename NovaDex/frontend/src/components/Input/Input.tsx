@@ -3,15 +3,15 @@ import React from 'react';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  suffix?: React.ReactNode;
-  prefix?: React.ReactNode;
+  append?: React.ReactNode;
+  prepend?: React.ReactNode;
 }
 
 const Input: React.FC<InputProps> = ({
   label,
   error,
-  suffix,
-  prefix,
+  append,
+  prepend,
   className = '',
   type = 'text',
   disabled = false,
@@ -25,9 +25,9 @@ const Input: React.FC<InputProps> = ({
         </label>
       )}
       <div className="relative">
-        {prefix && (
+        {prepend && (
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary">
-            {prefix}
+            {prepend}
           </div>
         )}
         <input
@@ -35,17 +35,17 @@ const Input: React.FC<InputProps> = ({
           disabled={disabled}
           className={`
             w-full bg-background border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-secondary
-            ${prefix ? 'pl-10' : ''}
-            ${suffix ? 'pr-10' : ''}
+            ${prepend ? 'pl-10' : ''}
+            ${append ? 'pr-10' : ''}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             ${error ? 'border-error' : ''}
             ${className}
           `}
           {...props}
         />
-        {suffix && (
+        {append && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {suffix}
+            {append}
           </div>
         )}
       </div>

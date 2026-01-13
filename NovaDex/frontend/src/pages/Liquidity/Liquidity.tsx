@@ -1,4 +1,4 @@
-import { useState } from 'react'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../../store'
 import { 
@@ -14,16 +14,13 @@ import Card from '../../components/Card/Card'
 const Liquidity: React.FC = () => {
   const { 
     token0, 
-    token1, 
-    amount0, 
-    amount1, 
+    token1,
+    amount0,
+    amount1,
     fee, 
-    tickLower, 
-    tickUpper, 
     liquidity, 
     isLoading, 
-    error, 
-    pools 
+    error
   } = useSelector((state: RootState) => state.liquidity)
   const dispatch = useDispatch()
 
@@ -118,7 +115,7 @@ const Liquidity: React.FC = () => {
                   onChange={handleAmount0Change}
                   disabled={isLoading}
                   className="text-xl"
-                  suffix={
+                  append={
                     <Button 
                       variant="primary"
                       size="sm"
@@ -146,7 +143,7 @@ const Liquidity: React.FC = () => {
                   onChange={handleAmount1Change}
                   disabled={isLoading}
                   className="text-xl"
-                  suffix={
+                  append={
                     <Button 
                       variant="primary"
                       size="sm"
@@ -173,7 +170,7 @@ const Liquidity: React.FC = () => {
                     type="number" 
                     placeholder="-120"
                     className="bg-background"
-                    suffix={<span className="text-text-secondary">Tick</span>}
+                    append={<span className="text-text-secondary">Tick</span>}
                   />
                 </div>
                 <div>
@@ -184,7 +181,7 @@ const Liquidity: React.FC = () => {
                     type="number" 
                     placeholder="120"
                     className="bg-background"
-                    suffix={<span className="text-text-secondary">Tick</span>}
+                    append={<span className="text-text-secondary">Tick</span>}
                   />
                 </div>
               </div>

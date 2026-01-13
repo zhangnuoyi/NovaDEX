@@ -1,4 +1,4 @@
-import { useState } from 'react'
+
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../../store'
 import { 
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
                 onChange={handleAmountInChange}
                 disabled={!isExactInput || isLoading}
                 className="text-xl"
-                suffix={
+                append={
                   <Button 
                     variant="primary"
                     size="sm"
@@ -170,7 +170,7 @@ const Home: React.FC = () => {
                 onChange={handleAmountOutChange}
                 disabled={isExactInput || isLoading}
                 className="text-xl"
-                suffix={
+                append={
                   <Button 
                     variant="primary"
                     size="sm"

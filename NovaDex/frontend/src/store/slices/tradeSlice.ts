@@ -39,7 +39,7 @@ const initialState: TradeState = {
   fee: 3000,
   deadline: Math.floor(Date.now() / 1000) + 300,
   isExactInput: true,
-  price: 0,
+  price: 2000,
   feeAmount: 0,
   isLoading: false,
   error: null

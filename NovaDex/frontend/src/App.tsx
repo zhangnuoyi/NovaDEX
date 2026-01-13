@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar/Navbar'
 import Sidebar from './components/Sidebar/Sidebar'
 import Home from './pages/Home/Home'
 import Liquidity from './pages/Liquidity/Liquidity'
 import Positions from './pages/Positions/Positions'
 import PoolExplorer from './pages/PoolExplorer/PoolExplorer'
-import Profile from './pages/Profile/Profile'
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -27,7 +26,6 @@ function App() {
               <Route path="/liquidity" element={<Liquidity />} />
               <Route path="/positions" element={<Positions />} />
               <Route path="/pool-explorer" element={<PoolExplorer />} />
-              <Route path="/profile" element={<Profile />} />
             </Routes>
           </main>
         </div>

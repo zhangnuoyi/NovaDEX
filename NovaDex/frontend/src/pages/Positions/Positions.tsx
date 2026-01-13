@@ -1,24 +1,20 @@
 import { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../../store'
-import { 
-  setSelectedPosition, 
-  setIsCollectingFees, 
-  setIsBurning, 
-  setError 
+import {
+  setSelectedPosition,
+  setIsCollectingFees,
+  setIsBurning,
+  setError
 } from '../../store/slices/positionSlice'
 import Button from '../../components/Button/Button'
-import Input from '../../components/Input/Input'
 import Card from '../../components/Card/Card'
 
 const Positions: React.FC = () => {
-  const { 
-    positions, 
-    selectedPosition, 
-    isLoading, 
-    error, 
-    isCollectingFees, 
-    isBurning 
+  const {
+    selectedPosition,
+    isCollectingFees,
+    isBurning
   } = useSelector((state: RootState) => state.position)
   const dispatch = useDispatch()
 
@@ -26,10 +22,10 @@ const Positions: React.FC = () => {
 
   const handleCollectFees = () => {
     if (!selectedPosition) return
-    
+
     dispatch(setIsCollectingFees(true))
     dispatch(setError(null))
-    
+
     // 这里应该调用实际的收取手续费逻辑
     // 模拟收取手续费
     setTimeout(() => {
@@ -41,10 +37,10 @@ const Positions: React.FC = () => {
 
   const handleBurnPosition = () => {
     if (!selectedPosition) return
-    
+
     dispatch(setIsBurning(true))
     dispatch(setError(null))
-    
+
     // 这里应该调用实际的销毁头寸逻辑
     // 模拟销毁头寸
     setTimeout(() => {
@@ -94,7 +90,7 @@ const Positions: React.FC = () => {
   return (
     <div className="mt-16">
       <h1 className="text-3xl font-bold mb-6">我的头寸</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左侧：头寸列表 */}
         <div className="lg:col-span-1">
@@ -107,7 +103,7 @@ const Positions: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {mockPositions.map((position) => (
-                  <div 
+                  <div
                     key={position.tokenId}
                     className={`bg-background border border-border rounded-lg p-4 cursor-pointer transition-colors
                       ${selectedPosition?.tokenId === position.tokenId ? 'border-secondary' : 'hover:border-primary/50'}`}
@@ -138,13 +134,13 @@ const Positions: React.FC = () => {
             )}
           </Card>
         </div>
-        
+
         {/* 右侧：头寸详情 */}
         <div className="lg:col-span-2">
           {showDetails && selectedPosition ? (
             <Card title="头寸详情">
               <div className="flex justify-end items-center mb-6">
-                <Button 
+                <Button
                   variant="secondary"
                   size="sm"
                   className="p-2 rounded-full"
@@ -155,7 +151,7 @@ const Positions: React.FC = () => {
                   </svg>
                 </Button>
               </div>
-              
+
               {/* 头寸基本信息 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-background rounded-lg p-4">
@@ -179,7 +175,7 @@ const Positions: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* 价格区间 */}
               <div className="bg-background rounded-lg p-4 mb-6">
                 <div className="text-sm text-text-secondary mb-2">价格区间</div>
@@ -197,7 +193,7 @@ const Positions: React.FC = () => {
                   <span className="text-text-secondary">价格区间图表</span>
                 </div>
               </div>
-              
+
               {/* 手续费信息 */}
               <div className="bg-background rounded-lg p-4 mb-6">
                 <div className="text-sm text-text-secondary mb-2">待收取手续费</div>
@@ -212,10 +208,10 @@ const Positions: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* 操作按钮 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button 
+                <Button
                   variant="success"
                   size="lg"
                   className="w-full"
@@ -224,7 +220,7 @@ const Positions: React.FC = () => {
                 >
                   {isCollectingFees ? '收取中...' : '收取手续费'}
                 </Button>
-                <Button 
+                <Button
                   variant="error"
                   size="lg"
                   className="w-full"
@@ -248,7 +244,7 @@ const Positions: React.FC = () => {
         </div>
       </div>
     </div>
-  }
+  )
 }
 
 export default Positions
