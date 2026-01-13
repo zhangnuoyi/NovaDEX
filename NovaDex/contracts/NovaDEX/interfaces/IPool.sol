@@ -13,6 +13,24 @@ interface IPool {
     function initialize(uint160 sqrtPriceX96) external;
 
     /**
+     * @notice 代币交换函数
+     * @param recipient 接收地址
+     * @param zeroForOne 交易方向（true表示token0→token1）
+     * @param amountSpecified 指定的交易数量
+     * @param sqrtPriceLimitX96 价格限制
+     * @param data 回调数据
+     * @return amount0 token0的变化量
+     * @return amount1 token1的变化量
+     */
+    function swap(
+        address recipient,
+        bool zeroForOne,
+        int256 amountSpecified,
+        uint160 sqrtPriceLimitX96,
+        bytes calldata data
+    ) external returns (int256 amount0, int256 amount1);
+
+    /**
      * @notice 获取池的基本信息
      * @return token0 代币0地址
      * @return token1 代币1地址
