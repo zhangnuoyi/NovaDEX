@@ -4,6 +4,10 @@ pragma solidity ^0.8.20;
 import { IPool } from "./interfaces/IPool.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { TickMath } from "./libraries/TickMath.sol";
+import { SqrtPriceMath } from "./libraries/SqrtPriceMath.sol";
+import { SwapMath } from "./libraries/SwapMath.sol";
+import { FullMath } from "./libraries/FullMath.sol";
 
 /**
  * @title Pool 合约实现
@@ -33,6 +37,7 @@ contract Pool is IPool {
     // 价格信息
     uint160 public sqrtPriceX96;
     int24 public tick;
+    uint128 public liquidity;
     bool public initialized;
 
     /**
@@ -65,8 +70,8 @@ contract Pool is IPool {
         require(!initialized, "Pool already initialized");
         initialized = true;
         sqrtPriceX96 = _sqrtPriceX96;
-        // 这里简单实现，实际项目中需要根据sqrtPriceX96计算tick
-        tick = 0;
+        // 使用TickMath库根据sqrtPriceX96计算tick值
+        tick = TickMath.getTickAtSqrtPrice(_sqrtPriceX96);
     }
 
     /**
@@ -110,6 +115,51 @@ contract Pool is IPool {
     }
 
     /**
+     * @notice 添加流动性函数
+     * @param amount0Desired 期望的token0数量
+     * @param amount1Desired 期望的token1数量
+     * @return amount0 实际添加的token0数量
+     * @return amount1 实际添加的token1数量
+     */
+    function mint(uint256 amount0Desired, uint256 amount1Desired) external returns (uint256 amount0, uint256 amount1) {
+        require(initialized, "Pool not initialized");
+        require(amount0Desired > 0 || amount1Desired > 0, "Invalid amounts");
+
+        // 使用SqrtPriceMath库计算流动性
+        uint128 liquidityAdded = SqrtPriceMath.getLiquidityForAmounts(
+            sqrtPriceX96,
+            TickMath.getSqrtPriceAtTick(tickUpper),
+            TickMath.getSqrtPriceAtTick(tickLower),
+            amount0Desired,
+            amount1Desired
+        );
+
+        // 如果是首次添加流动性
+        if (liquidity == 0) {
+            // 初始化流动性
+            liquidity = liquidityAdded;
+        } else {
+            // 累加流动性
+            liquidity = liquidity + liquidityAdded;
+        }
+
+        // 计算实际需要的代币数量
+        (amount0, amount1) = SqrtPriceMath.getAmountsForLiquidity(
+            sqrtPriceX96,
+            TickMath.getSqrtPriceAtTick(tickUpper),
+            TickMath.getSqrtPriceAtTick(tickLower),
+            liquidityAdded,
+            true
+        );
+
+        // 转移代币到合约
+        IERC20(token0).safeTransferFrom(msg.sender, address(this), amount0);
+        IERC20(token1).safeTransferFrom(msg.sender, address(this), amount1);
+
+        return (amount0, amount1);
+    }
+
+    /**
      * @notice 代币交换函数
      * @param recipient 接收地址
      * @param zeroForOne 交易方向（true表示token0→token1）
@@ -130,12 +180,48 @@ contract Pool is IPool {
         require(initialized, "Pool not initialized");
         require(recipient != address(0), "Invalid recipient");
         require(amountSpecified != 0, "Invalid amount");
+        require(liquidity > 0, "Insufficient liquidity");
 
-        // 这里简化实现，实际项目中需要复杂的价格计算和代币转移逻辑
-        // 由于这是一个教学实现，我们简单地返回0作为变化量
-        // 在实际项目中，需要根据价格和流动性计算实际的代币变化量
-        amount0 = 0;
-        amount1 = 0;
+        // 确保价格限制在有效范围内
+        require(
+            (zeroForOne && sqrtPriceLimitX96 < sqrtPriceX96 && sqrtPriceLimitX96 > TickMath.getSqrtPriceAtTick(tickLower)) ||
+            (!zeroForOne && sqrtPriceLimitX96 > sqrtPriceX96 && sqrtPriceLimitX96 < TickMath.getSqrtPriceAtTick(tickUpper)),
+            "Invalid price limit"
+        );
+
+        // 计算交易步长
+        (uint160 sqrtPriceNextX96, uint256 amountIn, uint256 amountOut, uint256 feeAmount) = SwapMath.computeSwapStep(
+            sqrtPriceX96,
+            sqrtPriceLimitX96,
+            liquidity,
+            amountSpecified,
+            fee
+        );
+
+        // 更新价格和tick
+        sqrtPriceX96 = sqrtPriceNextX96;
+        tick = TickMath.getTickAtSqrtPrice(sqrtPriceNextX96);
+
+        // 处理代币转移
+        if (zeroForOne) {
+            // token0 → token1
+            amount0 = -int256(amountIn + feeAmount);
+            amount1 = int256(amountOut);
+            
+            // 转移输入代币
+            IERC20(token0).safeTransferFrom(msg.sender, address(this), amountIn + feeAmount);
+            // 转移输出代币
+            IERC20(token1).safeTransfer(recipient, amountOut);
+        } else {
+            // token1 → token0
+            amount0 = int256(amountOut);
+            amount1 = -int256(amountIn + feeAmount);
+            
+            // 转移输入代币
+            IERC20(token1).safeTransferFrom(msg.sender, address(this), amountIn + feeAmount);
+            // 转移输出代币
+            IERC20(token0).safeTransfer(recipient, amountOut);
+        }
 
         // 发出Swap事件
         emit Swap(
@@ -144,7 +230,7 @@ contract Pool is IPool {
             amount0,
             amount1,
             sqrtPriceX96,
-            0, // liquidity
+            liquidity,
             tick
         );
 

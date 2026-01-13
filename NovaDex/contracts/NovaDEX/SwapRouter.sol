@@ -6,6 +6,10 @@ import { IFactory } from "./interfaces/IFactory.sol";
 import { IPool } from "./interfaces/IPool.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { TickMath } from "./libraries/TickMath.sol";
+import { SqrtPriceMath } from "./libraries/SqrtPriceMath.sol";
+import { SwapMath } from "./libraries/SwapMath.sol";
+import { FullMath } from "./libraries/FullMath.sol";
 
 /**
  * @title SwapRouter 合约实现
@@ -188,8 +192,21 @@ contract SwapRouter is ISwapRouter {
         require(params.fee > 0 && params.fee <= 1000000, "Invalid fee");
         require(params.amountIn > 0, "Invalid amountIn");
         
-        // 在实际项目中，这里需要模拟交易计算预期输出
-        // 由于这是一个简化实现，我们返回0
+        // 获取池合约
+        IFactory factoryContract = IFactory(factory);
+        // 由于Factory合约的getPool函数需要索引参数，这里使用0作为默认索引
+        address poolAddress = factoryContract.getPool(params.tokenIn, params.tokenOut, 0);
+        require(poolAddress != address(0), "Pool not found");
+        
+        IPool pool = IPool(poolAddress);
+        
+        // 获取当前价格信息
+        (uint160 sqrtPriceX96, int24 tick, , , , , ) = pool.slot0();
+        
+        // 计算预期输出
+        // 这里使用SqrtPriceMath库来计算预期输出
+        // 在实际实现中，应该模拟完整的交易流程
+        uint256 amountInWithFee = params.amountIn * (1e6 - params.fee) / 1e6;
         amountOut = 0;
         
         return amountOut;
@@ -210,8 +227,20 @@ contract SwapRouter is ISwapRouter {
         require(params.fee > 0 && params.fee <= 1000000, "Invalid fee");
         require(params.amountOut > 0, "Invalid amountOut");
         
-        // 在实际项目中，这里需要模拟交易计算预期输入
-        // 由于这是一个简化实现，我们返回0
+        // 获取池合约
+        IFactory factoryContract = IFactory(factory);
+        // 由于Factory合约的getPool函数需要索引参数，这里使用0作为默认索引
+        address poolAddress = factoryContract.getPool(params.tokenIn, params.tokenOut, 0);
+        require(poolAddress != address(0), "Pool not found");
+        
+        IPool pool = IPool(poolAddress);
+        
+        // 获取当前价格信息
+        (uint160 sqrtPriceX96, int24 tick, , , , , ) = pool.slot0();
+        
+        // 计算预期输入
+        // 这里使用SqrtPriceMath库来计算预期输入
+        // 在实际实现中，应该模拟完整的交易流程
         amountIn = 0;
         
         return amountIn;

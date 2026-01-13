@@ -65,4 +65,13 @@ interface IPool {
         uint8 feeProtocol,
         bool unlocked
     );
+
+    /**
+     * @notice 添加流动性函数
+     * @param amount0Desired 期望的token0数量
+     * @param amount1Desired 期望的token1数量
+     * @return amount0 实际添加的token0数量
+     * @return amount1 实际添加的token1数量
+     */
+    function mint(uint256 amount0Desired, uint256 amount1Desired) external returns (uint256 amount0, uint256 amount1);
 }

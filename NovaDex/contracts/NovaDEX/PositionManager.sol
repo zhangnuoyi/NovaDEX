@@ -8,6 +8,10 @@ import { IFactory } from "./interfaces/IFactory.sol";
 import { IPool } from "./interfaces/IPool.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { TickMath } from "./libraries/TickMath.sol";
+import { SqrtPriceMath } from "./libraries/SqrtPriceMath.sol";
+import { SwapMath } from "./libraries/SwapMath.sol";
+import { FullMath } from "./libraries/FullMath.sol";
 
 /**
  * @title PositionManager 合约实现
@@ -87,23 +91,33 @@ contract PositionManager is ERC721URIStorage, IPositionManager {
         IPool pool = IPool(poolAddress);
 
         // 检查池是否已初始化
-        (uint160 sqrtPriceX96, int24 tick, , , , , ) = pool.slot0();
-        // 如果池未初始化，可以直接提供初始流动性
-        // 这里简化处理，实际项目中需要更复杂的逻辑
+        (uint160 sqrtPriceX96, , , , , , bool unlocked) = pool.slot0();
+        
+        // 如果池未初始化，使用提供的代币数量计算初始价格并初始化
+        if (!unlocked) {
+            // 计算初始价格的平方根
+            // 这里假设初始价格是token1/token0 = amount0/amount1
+            uint256 initialPrice = amount1Desired > 0 ? (amount0Desired * 1e18) / amount1Desired : 1e18;
+            uint160 initialSqrtPriceX96 = SqrtPriceMath.priceToSqrtPriceX96(initialPrice);
+            
+            // 初始化池
+            pool.initialize(initialSqrtPriceX96);
+        }
 
         // 计算流动性并提供流动性
-        // 这里简化处理，实际项目中需要更复杂的逻辑
-        liquidity = 0;
-        amount0 = 0;
-        amount1 = 0;
-
-        // 转移代币到池
-        if (amount0 > 0) {
-            IERC20(token0).safeTransferFrom(msg.sender, address(pool), amount0);
-        }
-        if (amount1 > 0) {
-            IERC20(token1).safeTransferFrom(msg.sender, address(pool), amount1);
-        }
+        // 转移代币到合约
+        IERC20(token0).safeTransferFrom(msg.sender, address(pool), amount0Desired);
+        IERC20(token1).safeTransferFrom(msg.sender, address(pool), amount1Desired);
+        
+        // 调用池的mint函数添加流动性
+        (amount0, amount1) = pool.mint(amount0Desired, amount1Desired);
+        
+        // 验证实际添加的代币数量是否满足最小要求
+        require(amount0 >= amount0Min, "Insufficient token0");
+        require(amount1 >= amount1Min, "Insufficient token1");
+        
+        // 获取添加的流动性
+        liquidity = 0; // 在实际实现中，应该从池合约中获取添加的流动性
 
         // 创建头寸NFT
         tokenId = _tokenIdCounter++;
